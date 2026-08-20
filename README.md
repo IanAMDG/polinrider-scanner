@@ -99,7 +99,9 @@ tools/polinrider_iocs.json
 tools/polinrider_packages.csv
 ```
 
-No Python packages are required. Python 3.9 or newer is recommended.
+No Python packages are required. Python 3.9 or newer is supported. The test
+workflow runs the scanner's synthetic-fixture suite on Ubuntu, Windows, and
+macOS with Python 3.9.
 
 ## Run locally
 
