@@ -49,17 +49,16 @@ granting it a personal access token. The scan executes on the caller's runner
 and uses the caller's normal GitHub Actions minutes.
 
 Copy [`examples/workflow-dispatch.yml`](examples/workflow-dispatch.yml) to
-`.github/workflows/polinrider-scan.yml` in the repository to scan, then replace
-`REPLACE_WITH_FULL_COMMIT_SHA` with a reviewed full commit SHA from this
-repository. Pinning the call prevents a future branch or tag update from
-silently changing code executed in the caller.
+`.github/workflows/polinrider-scan.yml` in the repository to scan. The example
+is pinned to a reviewed full commit SHA. Pinning the call prevents a future
+branch or tag update from silently changing code executed in the caller.
 
 The example adds a manual **Run workflow** button and calls:
 
 ```yaml
 jobs:
   scan:
-    uses: IanAMDG/polinrider-scanner/.github/workflows/reusable-scan.yml@REPLACE_WITH_FULL_COMMIT_SHA
+    uses: IanAMDG/polinrider-scanner/.github/workflows/reusable-scan.yml@b978aaf500cab2f55a2c13515d2bfc3befd463d2
     with:
       git_history: true
       fail_on: high

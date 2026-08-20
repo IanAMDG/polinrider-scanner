@@ -1,5 +1,5 @@
 # Copy this file to .github/workflows/polinrider-scan.yml in the repository to scan.
-# Replace REPLACE_WITH_FULL_COMMIT_SHA with a reviewed commit from the scanner repo.
+# The reusable workflow is pinned to the exact reviewed scanner commit below.
 name: PolinRider malware scan
 
 on:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   scan:
-    uses: IanAMDG/polinrider-scanner/.github/workflows/reusable-scan.yml@REPLACE_WITH_FULL_COMMIT_SHA
+    uses: IanAMDG/polinrider-scanner/.github/workflows/reusable-scan.yml@b978aaf500cab2f55a2c13515d2bfc3befd463d2
     with:
       git_history: true
       fail_on: high
