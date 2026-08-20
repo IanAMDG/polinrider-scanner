@@ -1,0 +1,88 @@
+name: PolinRider malware scan
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "23 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    name: Read-only repository and history scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out all local refs
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select a trusted scanner copy
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            if [[ ! "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "Invalid pull request base SHA." >&2
+              exit 2
+            fi
+            trusted_dir="$RUNNER_TEMP/polinrider-tools"
+            mkdir -p "$trusted_dir"
+            for file in polinrider_scan.py polinrider_iocs.json polinrider_packages.csv; do
+              git show "${BASE_SHA}:tools/${file}" > "$trusted_dir/$file"
+            done
+            echo "POLINRIDER_SCANNER=$trusted_dir/polinrider_scan.py" >> "$GITHUB_ENV"
+          else
+            echo "POLINRIDER_SCANNER=$GITHUB_WORKSPACE/tools/polinrider_scan.py" >> "$GITHUB_ENV"
+          fi
+
+      - name: Scan without executing repository code
+        id: scan
+        shell: bash
+        run: |
+          set +e
+          python3 "$POLINRIDER_SCANNER" . \
+            --git-history \
+            --progress always \
+            --format github \
+            --sarif polinrider-results.sarif
+          scan_status=$?
+          echo "status=${scan_status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload SARIF when code scanning is available
+        if: >-
+          always() &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4
+        with:
+          sarif_file: polinrider-results.sarif
+          category: polinrider-static-scan
+
+      - name: Enforce the scan result
+        if: always()
+        shell: bash
+        env:
+          SCAN_STATUS: ${{ steps.scan.outputs.status }}
+        run: |
+          if [[ "$SCAN_STATUS" == "1" ]]; then
+            echo "PolinRider scan found a high or critical indicator." >&2
+            exit 1
+          fi
+          if [[ "$SCAN_STATUS" != "0" ]]; then
+            echo "PolinRider scan was incomplete (status: ${SCAN_STATUS:-missing})." >&2
+            exit 2
+          fi

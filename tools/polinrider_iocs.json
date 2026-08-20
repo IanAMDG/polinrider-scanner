@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "campaign": "PolinRider / Contagious Interview",
+  "updated": "2026-08-20",
+  "sources": {
+    "behavior": "https://socket.dev/blog/polinrider-north-korea-linked-supply-chain-campaign-expands",
+    "package_feed": "https://socket.dev/api/public/supply-chain-attacks/polinrider/packages.csv",
+    "vscode_tasks": "https://www.abstract.security/blog/contagious-interview-tracking-the-vs-code-tasks-infection-vector"
+  },
+  "payloads": [
+    {
+      "variant": "v1",
+      "sha256": "53abf37710d6f2e35694fbe7cfaf1108127cbc001ce3e6bf994d0486cae5a0e8",
+      "size": 5533,
+      "severity": "critical",
+      "confidence": "publicly-corroborated-weaker-source-chain"
+    }
+  ],
+  "payload_signatures": [
+    {
+      "name": "PolinRider V1 decoder",
+      "all_of": ["rmcej%otb%", "_$_1e42"],
+      "severity": "critical",
+      "source": "OpenSourceMalware and Sonatype"
+    },
+    {
+      "name": "PolinRider V1 decoder seed",
+      "all_of": ["rmcej%otb%", "2857687"],
+      "severity": "critical",
+      "source": "OpenSourceMalware and Sonatype"
+    },
+    {
+      "name": "PolinRider V2 decoder",
+      "all_of": ["Cot%3t=shtP", "MDy"],
+      "severity": "critical",
+      "source": "OpenSourceMalware"
+    }
+  ],
+  "campaign_strings": [
+    {
+      "value": "vscode-config.vercel.app",
+      "severity": "medium",
+      "description": "Known PolinRider campaign domain"
+    },
+    {
+      "value": "vscode-bootstrapper.vercel.app",
+      "severity": "medium",
+      "description": "Known PolinRider campaign domain"
+    },
+    {
+      "value": "nafkmlanpinblehjeebdjaolelielbgc",
+      "severity": "medium",
+      "description": "Known campaign Chrome extension ID"
+    },
+    {
+      "value": "vscode-settings-bootstrap.vercel.app",
+      "severity": "medium",
+      "description": "Contagious Interview task-vector domain"
+    },
+    {
+      "value": "vscode-settings-config.vercel.app",
+      "severity": "medium",
+      "description": "Contagious Interview task-vector domain"
+    },
+    {
+      "value": "vscode-load-config.vercel.app",
+      "severity": "medium",
+      "description": "Contagious Interview task-vector domain"
+    },
+    {
+      "value": "default-configuration.vercel.app",
+      "severity": "medium",
+      "description": "Contagious Interview task-vector domain"
+    },
+    {
+      "value": "260120.vercel.app",
+      "severity": "medium",
+      "description": "Contagious Interview task-vector domain"
+    }
+  ],
+  "affected_packages": [],
+  "affected_packages_csv": "polinrider_packages.csv"
+}
