@@ -41,7 +41,54 @@ case-specific AWS pivot are not used as default campaign detections.
 See [research/polinrider-scanner.md](research/polinrider-scanner.md) for the
 cited validation record and confidence notes.
 
-## Install in a repository
+## Use from another repository
+
+Because this repository and its reusable workflow are public, repositories in
+other GitHub organizations can call the scanner without copying its code or
+granting it a personal access token. The scan executes on the caller's runner
+and uses the caller's normal GitHub Actions minutes.
+
+Copy [`examples/workflow-dispatch.yml`](examples/workflow-dispatch.yml) to
+`.github/workflows/polinrider-scan.yml` in the repository to scan, then replace
+`REPLACE_WITH_FULL_COMMIT_SHA` with a reviewed full commit SHA from this
+repository. Pinning the call prevents a future branch or tag update from
+silently changing code executed in the caller.
+
+The example adds a manual **Run workflow** button and calls:
+
+```yaml
+jobs:
+  scan:
+    uses: IanAMDG/polinrider-scanner/.github/workflows/reusable-scan.yml@REPLACE_WITH_FULL_COMMIT_SHA
+    with:
+      git_history: true
+      fail_on: high
+      upload_sarif: true
+```
+
+The target organization's Actions policy must allow actions and reusable
+workflows from `IanAMDG/polinrider-scanner`. An organization administrator may
+need to add that repository to the allowed list. The caller grants only
+`contents: read` and `security-events: write`; set `upload_sarif: false` and
+omit `security-events: write` if GitHub code scanning is unavailable.
+
+The reusable workflow checks out the target repository and then obtains the
+scanner from `job.workflow_repository` at `job.workflow_sha`. This means the
+scanner source is tied to the exact reusable-workflow revision selected by the
+caller. It never runs code from the target repository. This mechanism requires
+GitHub.com; the two `job.workflow_*` properties are not currently available on
+GitHub Enterprise Server.
+
+Supported inputs are:
+
+| Input | Default | Meaning |
+| --- | --- | --- |
+| `git_history` | `true` | Scan blobs reachable from the caller's local Git refs |
+| `include_vendor` | `false` | Include dependency and build directories |
+| `fail_on` | `high` | Fail at `low`, `medium`, `high`, or `critical` severity |
+| `upload_sarif` | `true` | Best-effort upload to GitHub code scanning |
+
+## Install a self-contained copy
 
 Copy this directory's contents into the root of the repository. The expected
 layout is:
@@ -63,6 +110,13 @@ Scan a working tree:
 python3 tools/polinrider_scan.py /path/to/repository
 ```
 
+On Windows, run the same dependency-free scanner from PowerShell with the
+Python launcher (or substitute `python` if that is how Python is installed):
+
+```powershell
+py -3 tools/polinrider_scan.py C:\path\to\repository
+```
+
 Also scan every blob reachable from the repository's local refs, without
 checking historical files out:
 
@@ -72,7 +126,8 @@ python3 tools/polinrider_scan.py /path/to/repository --git-history
 
 History scanning is offline. Git lazy fetching and all Git transport protocols
 are disabled; a partial clone is scanned using the objects already present and
-reported as incomplete when promised objects are missing.
+reported as incomplete when promised objects are missing. `--git-history`
+requires the Git command-line client; worktree-only scanning does not.
 
 Progress is automatic on an interactive terminal and is written to stderr, so
 JSON and SARIF on stdout stay valid. Force it on or off with:
@@ -106,8 +161,8 @@ strict review gate.
 
 ## GitHub Actions
 
-The included workflow runs on pushes, pull requests, weekly, and by manual
-dispatch. It:
+The included standalone workflow runs in this repository on pushes, pull
+requests, weekly, and by manual dispatch. It:
 
 1. checks out full history with credentials disabled after checkout;
 2. on pull requests, loads the scanner and rule data from the trusted base
